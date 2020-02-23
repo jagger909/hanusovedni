@@ -9,7 +9,7 @@ services:
       - POSTGRES_USER=hanusovedni
       - POSTGRES_DB=hanusovedni
     networks:
-      - hanus-network
+      - hanus-net
 
   web:
     build: .
@@ -19,10 +19,12 @@ services:
     depends_on:
       - db
     networks:
-      - hanus-network
+      - hanus-net
 
 volumes:
   dbdata:
 
 networks:
-  hanus-network:
+  hanus-net:
+    external:
+      name: hanus-net
