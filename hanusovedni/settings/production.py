@@ -21,10 +21,10 @@ STATIC_ROOT = "/static_root"
 MEDIA_ROOT = "/media_root"
 
 WAGTAILFRONTENDCACHE = {
-    'cloudflare': {
-        'BACKEND': 'wagtail.contrib.frontend_cache.backends.CloudflareBackend',
-        'BEARER_TOKEN': os.environ["CLOUDFLARE_ZONEID"],
-        'ZONEID': os.environ["CLOUDFLARE_BEARER_TOKEN"],
+    "cloudflare": {
+        "BACKEND": "wagtail.contrib.frontend_cache.backends.CloudflareBackend",
+        "BEARER_TOKEN": os.environ["CLOUDFLARE_BEARER_TOKEN"],
+        "ZONEID": os.environ["CLOUDFLARE_ZONEID"],
     },
 }
 
@@ -33,7 +33,6 @@ WAGTAILFRONTENDCACHE_LANGUAGES = [lang[0] for lang in LANGUAGES]
 sentry_sdk.init(
     dsn=os.environ["SENTRY_DSN"],
     integrations=[DjangoIntegration()],
-
     # If you wish to associate users to errors (assuming you are using
     # django.contrib.auth) you may enable sending PII data.
     # send_default_pii=True
