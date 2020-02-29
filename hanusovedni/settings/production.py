@@ -5,6 +5,8 @@ from .base import *
 
 DEBUG = False
 
+WAGTAILAPI_BASE_URL = "http://hanusovedni.online"
+
 SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 
 ALLOWED_HOSTS = os.environ["DJANGO_ALLOWED_HOSTS"].split(",")
