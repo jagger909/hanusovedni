@@ -6,10 +6,11 @@ log:
 entryPoints:
   web-entry:
     address: :80
-    redirections:
-      entryPoint:
-        to: web-entry-secure
-        scheme: https
+    http:
+      redirections:
+        entryPoint:
+          to: web-entry-secure
+          scheme: https
   web-entry-secure:
     address: :443
 
