@@ -1,62 +1,11 @@
 stages:
-  - test
+  - purge cache
   - build
   - deploy
 
-.test-script: &test-script
-    stage: test
-    script:
-      - echo "Ahoj"
-      - echo ${BLA}
-      - printenv
-
-
-test-test:staging:
-  <<: *test-script
-  environment:
-    name: staging
-
-
-test-test:production:
-  <<: *test-script
-  environment:
-    name: production
-
-
-build:
-  stage: build
-  image: docker:19.03.8
-  services:
-    - docker:dind
-  before_script:
-    - docker version
-    - echo ${CI_REGISTRY_PASSWORD} | docker login -u ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}
-  script:
-    - set -euo pipefail
-    # Pull the latest version of the image, in order to populate the build cache:
-    - docker pull ${CI_REGISTRY_IMAGE}:compile-stage || true
-    - docker pull ${CI_REGISTRY_IMAGE}:latest || true
-    # Build the compile stage:
-    - "docker build --target compile-image \
-        --cache-from=${CI_REGISTRY_IMAGE}:compile-stage \
-        --tag ${CI_REGISTRY_IMAGE}:compile-stage ."
-    # Build the runtime stage, using cached compile stage:
-    - "docker build --target runtime-image \
-        --cache-from=${CI_REGISTRY_IMAGE}:compile-stage \
-        --cache-from=${CI_REGISTRY_IMAGE}:latest \
-        --tag ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID} \
-        --tag ${CI_REGISTRY_IMAGE}:latest ."
-    # Push the new versions:
-    - docker push ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}
-    - docker push ${CI_REGISTRY_IMAGE}:compile-stage
-    - docker push ${CI_REGISTRY_IMAGE}:latest
-
-deploy_to_staging:
+.deploy-template: &deploy-template
   stage: deploy
   image: kroniak/ssh-client:3.9
-  environment:
-    name: staging
-    url: https://hanusovedni.online
   before_script:
 #    - apk add curl
     - mkdir -p ~/.ssh
@@ -91,52 +40,60 @@ deploy_to_staging:
         -c docker-compose.prod.yml
         --with-registry-auth hanusovedni\""
     - echo "Deployment done succesfully"
-    - "curl -X POST \"https://api.cloudflare.com/client/v4/zones/${STAGING_CLOUDFLARE_ZONEID}/purge_cache\" \
-        -H \"Authorization: Bearer ${STAGING_CLOUDFLARE_BEARER_TOKEN}\" \
-        -H \"Content-Type: application/json\" \
-        --data '{\"purge_everything\":true}'"
 
 
-deploy_to_production:
-  stage: deploy
+build:
+  stage: build
+  image: docker:19.03.8
+  services:
+    - docker:dind
+  before_script:
+    - docker version
+    - echo ${CI_REGISTRY_PASSWORD} | docker login -u ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}
+  script:
+    - set -euo pipefail
+    # Pull the latest version of the image, in order to populate the build cache:
+    - docker pull ${CI_REGISTRY_IMAGE}:compile-stage || true
+    - docker pull ${CI_REGISTRY_IMAGE}:latest || true
+    # Build the compile stage:
+    - "docker build --target compile-image \
+        --cache-from=${CI_REGISTRY_IMAGE}:compile-stage \
+        --tag ${CI_REGISTRY_IMAGE}:compile-stage ."
+    # Build the runtime stage, using cached compile stage:
+    - "docker build --target runtime-image \
+        --cache-from=${CI_REGISTRY_IMAGE}:compile-stage \
+        --cache-from=${CI_REGISTRY_IMAGE}:latest \
+        --tag ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID} \
+        --tag ${CI_REGISTRY_IMAGE}:latest ."
+    # Push the new versions:
+    - docker push ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}
+    - docker push ${CI_REGISTRY_IMAGE}:compile-stage
+    - docker push ${CI_REGISTRY_IMAGE}:latest
+
+deploy:staging:
+  <<: *deploy-template
+  environment:
+    name: staging
+    url: https://hanusovedni.online
+
+deploy:production:
+  <<: *deploy-template
   when: manual
   environment:
     name: production
     url: https://hanusovedni.sk
-  before_script:
-    - apk add curl
-    - mkdir -p ~/.ssh
-    - echo "${PROD_PRIVATE_KEY}" | tr -d '\r' > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
-    - eval "$(ssh-agent -s)"
-    - ssh-add ~/.ssh/id_rsa
-    - ssh-keyscan -H ${PROD_IP} >> ~/.ssh/known_hosts
-  script:
-    - scp -r docker-compose.yml docker-compose.prod.yml root@${PROD_IP}:~/
-    - scp ${PROD_SECRETS} root@${PROD_IP}:~/secrets.env
-    - ssh root@${PROD_IP} "docker system prune --all --force"
-    - ssh root@${PROD_IP} "echo \"WEB_IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}\" >> secrets.env"
-    - ssh root@${PROD_IP} "echo ${CI_REGISTRY_PASSWORD} | docker login -u ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}"
-    - "ssh root@${PROD_IP} \"
-        docker run --rm
-        --network hanus-net
-        --env-file secrets.env
-        -e DJANGO_SETTINGS_MODULE=\"hanusovedni.settings.production\"
-        ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID} python manage.py migrate --no-input\""
-    - "ssh root@${PROD_IP} \"
-        docker run --rm
-        -v /var/www/static:/static_root
-        --env-file secrets.env
-        -e DJANGO_SETTINGS_MODULE=\"hanusovedni.settings.production\"
-        ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID} python manage.py collectstatic --no-input\""
-    - "ssh root@${PROD_IP} \"
-        WEB_IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}
-        docker stack deploy
-        -c docker-compose.yml
-        -c docker-compose.prod.yml
-        --with-registry-auth hanusovedni\""
-    - echo "Deployment done succesfully"
-    - "curl -X POST \"https://api.cloudflare.com/client/v4/zones/${PROD_CLOUDFLARE_ZONEID}/purge_cache\" \
-        -H \"Authorization: Bearer ${PROD_CLOUDFLARE_BEARER_TOKEN}\" \
-        -H \"Content-Type: application/json\" \
-        --data '{\"purge_everything\":true}'"
+
+.purge-CF-template: &purge-CF-template
+  stage: purge cache
+  image: curlimages/curl:7.69.1
+  script: >
+    curl -X POST "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONEID}/purge_cache"
+        -H "Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}"
+        -H "Content-Type: application/json"
+        --data '{"purge_everything":true}'
+
+purge-CF:staging:
+  <<: *purge-CF-template
+  environment:
+    name: staging
+    url: https://hanusovedni.online
