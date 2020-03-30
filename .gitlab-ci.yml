@@ -87,11 +87,10 @@ deploy:production:
   stage: purge cache
   image: curlimages/curl:7.69.1
   script:
-    - >
-      curl -X POST "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONEID}/purge_cache"
-        -H "Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}"
-        -H "Content-Type: application/json"
-        --data '{"purge_everything":true}'
+    - "curl -X POST 'https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONEID}/purge_cache'
+        -H 'Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}'
+        -H 'Content-Type: application/json'
+        --data '{\"purge_everything\":true}'"
 
 purge-CF:staging:
   <<: *purge-CF-template
