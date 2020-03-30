@@ -27,19 +27,13 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.web-router.rule=Host(`hanusovedni.online`, `www.hanusovedni.online`, `hanusovedni.sk`, `www.hanusovedni.sk`)"
-        - "traefik.http.routers.web-router.middlewares=to-https"
         - "traefik.http.routers.web-router.middlewares=without-www"
         - "traefik.http.routers.web-https-router.rule=Host(`hanusovedni.online`, `www.hanusovedni.online`, `hanusovedni.sk`, `www.hanusovedni.sk`)"
         - "traefik.http.routers.web-https-router.tls"
-        - "traefik.http.routers.web-https-router.middlewares=to-https"
         - "traefik.http.routers.web-https-router.middlewares=without-www"
         - "traefik.http.services.web.loadbalancer.server.port=8000"
-        - "traefik.http.middlewares.to-https.redirectregex.regex=^http://(.*)"
-        - "traefik.http.middlewares.to-https.redirectregex.replacement=https://$${1}"
-        - "traefik.http.middlewares.to-https.redirectregex.priority=2"
-        - "traefik.http.middlewares.without-www.redirectregex.regex=^https://www\\.hanusovedni\\.(online|sk)/(.*)"
+        - "traefik.http.middlewares.without-www.redirectregex.regex=^https?://www\\.hanusovedni\\.(online|sk)/(.*)"
         - "traefik.http.middlewares.without-www.redirectregex.replacement=https://hanusovedni.$${1}/$${2}"
-        - "traefik.http.middlewares.without-www.redirectregex.priority=1"
 
   nginx:
     volumes:
