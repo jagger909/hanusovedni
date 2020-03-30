@@ -43,8 +43,8 @@ services:
     deploy:
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.nginx-router.rule=Host(`hanusovedni.online`, `hanusovedni.sk`) && PathPrefix(`/static/`, `/media/`)"
-        - "traefik.http.routers.nginx-https-router.rule=Host(`hanusovedni.online`, `hanusovedni.sk`) && PathPrefix(`/static/`, `/media/`)"
+        - "traefik.http.routers.nginx-router.rule=Host(`hanusovedni.online`, `www.hanusovedni.online`, `hanusovedni.sk`, `www.hanusovedni.sk`) && PathPrefix(`/static/`, `/media/`)"
+        - "traefik.http.routers.nginx-https-router.rule=Host(`hanusovedni.online`, `www.hanusovedni.online`, `hanusovedni.sk`, `www.hanusovedni.sk`) && PathPrefix(`/static/`, `/media/`)"
         - "traefik.http.routers.nginx-https-router.tls"
         - "traefik.http.services.nginx.loadbalancer.server.port=80"
 
@@ -64,5 +64,3 @@ services:
         - "traefik.http.services.dummy-svc.loadbalancer.server.port=9999"
         - "traefik.http.routers.api.entryPoints=traefik"
         - "traefik.http.routers.api.service=api@internal"
-        - "traefik.http.routers.api.middlewares=api-auth"
-        - "traefik.http.middlewares.api-auth.basicauth.users=test:$$apr1$$H6uskkkW$$IgXLP6ewTrSuBkTrqE8wj/" # test:test
