@@ -26,7 +26,7 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.web-router.rule=Host(`hanusovedni.online`, `hanusovedni.sk`)"
+        - "traefik.http.routers.web-router.rule=Host(`hanusovedni.online`, `www.hanusovedni.online`, `hanusovedni.sk`, `www.hanusovedni.sk`)"
         - "traefik.http.routers.web-router.middlewares=www-red"
         - "traefik.http.routers.web-https-router.rule=Host(`hanusovedni.online`, `hanusovedni.sk`)"
         - "traefik.http.routers.web-https-router.tls"
