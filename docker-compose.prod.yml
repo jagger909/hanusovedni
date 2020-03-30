@@ -32,7 +32,7 @@ services:
         - "traefik.http.routers.web-https-router.tls"
         - "traefik.http.routers.web-https-router.middlewares=www-red"
         - "traefik.http.services.web.loadbalancer.server.port=8000"
-        - "traefik.http.middlewares.www-red.redirectregex.regex=^https?://www\.hanusovedni\.(online|sk)/(.*)"
+        - "traefik.http.middlewares.www-red.redirectregex.regex=^https?://www\\.hanusovedni\\.(online|sk)/(.*)"
         - "traefik.http.middlewares.www-red.redirectregex.replacement=https://hanusovedni.$${1}/$${2}"
 
   nginx:
