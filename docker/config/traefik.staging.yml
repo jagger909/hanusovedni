@@ -6,19 +6,12 @@ log:
 entryPoints:
   web-entry:
     address: :80
-#    redirections:
-#      entryPoint:
-#        to: web-entry-secure
-#        scheme: https
+    redirections:
+      entryPoint:
+        to: web-entry-secure
+        scheme: https
   web-entry-secure:
     address: :443
-
-http:
-  middlewares:
-    without-www:
-      redirectRegex:
-        regex: "^https?://www\.hanusovedni\.(online|sk)/(.*)"
-        replacement: "https://hanusovedni.${1}/${2}"
 
 
 api:
