@@ -55,7 +55,7 @@ services:
       - ./traefik.${ENVIRONMENT}.yml:/etc/traefik/traefik.yml:delegated
     deploy:
       labels:
-        - "traefik.http.routers.api.rule=Host(`hanusovedni.online`, `hanusovedni.sk`)"
+        - "traefik.http.routers.api.rule=Host(`traefik.hanusovedni.online`, `traefik.hanusovedni.sk`)"
         - "traefik.http.routers.api.service=api@internal"
         - "traefik.http.routers.api.middlewares=auth"
         - "traefik.http.middlewares.auth.basicauth.users=admin:$$apr1$$d9hr9HBB$$4HxwgUir3HP4EsggP/QNo0"
