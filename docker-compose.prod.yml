@@ -56,8 +56,8 @@ services:
 
   reverse-proxy:
     volumes:
-      - ./traefik.${ENVIRONMENT}.yml:/etc/traefik/traefik.yml:delegated
-      - /var/www/acme.json:./acme.json
+      - ./traefik.${ENVIRONMENT}.yml:/etc/traefik/traefik.yml:ro
+      - /var/www/acme.json:acme.json
     deploy:
       labels:
         - "traefik.enable=true"
