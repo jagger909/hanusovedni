@@ -90,16 +90,16 @@ deploy:production:
     - "curl -X POST 'https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONEID}/purge_cache'
         -H 'Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}'
         -H 'Content-Type: application/json'
-        --data '{"purge_everything":true}'"
+        --data '{\"purge_everything\":true}'"
 
 purge-cache:staging:
-  stage: purge staging
+  stage: purge cache staging
   extends:
     - .purge-cache
     - .staging
 
 purge-cache:production:
-  stage: purge production
+  stage: purge cache production
   extends:
     - .purge-cache
     - .production
