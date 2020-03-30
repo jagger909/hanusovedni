@@ -34,6 +34,7 @@ services:
 
   nginx:
     volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - /var/www/static:/usr/share/nginx/static:ro
       - /var/www/media:/usr/share/nginx/media:ro
     deploy:
@@ -53,7 +54,7 @@ services:
 
   reverse-proxy:
     volumes:
-      - ./traefik.yml:/etc/traefik/traefik.yml:delegated
+      - ./traefik.${ENVIRONMENT}.yml:/etc/traefik/traefik.yml:delegated
     deploy:
       labels:
         - "traefik.http.routers.api.rule=Host(`hanusovedni.online`, `hanusovedni.sk`)"

@@ -46,8 +46,7 @@ build-image:
     - mkdir -p ~/.ssh
     - echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
     - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
-    - scp docker-compose.yml docker-compose.prod.yml nginx.conf $SERVER:~/
-    - scp traefik.$CI_ENVIRONMENT_NAME.yml $SERVER:~/traefik.yml
+    - scp -r docker-compose.yml docker-compose.prod.yml ./docker/config/* $SERVER:~/
     - scp $SECRETS $SERVER:~/secrets.env
     - ssh $SERVER "echo "WEB_IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}" >> secrets.env"
     - ssh $SERVER "echo ${CI_REGISTRY_PASSWORD} | docker login -u ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}"
