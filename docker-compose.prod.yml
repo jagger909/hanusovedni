@@ -27,13 +27,13 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.web-router.rule=Host(`hanusovedni.online`, `www.hanusovedni.online`, `hanusovedni.sk`, `www.hanusovedni.sk`)"
-        - "traefik.http.routers.web-router.middlewares=www-red"
-        - "traefik.http.routers.web-https-router.rule=Host(`hanusovedni.online`, `hanusovedni.sk`)"
+        - "traefik.http.routers.web-router.middlewares=without-www"
+        - "traefik.http.routers.web-https-router.rule=Host(`hanusovedni.online`, `www.hanusovedni.online`, `hanusovedni.sk`, `www.hanusovedni.sk`)"
         - "traefik.http.routers.web-https-router.tls"
-        - "traefik.http.routers.web-https-router.middlewares=www-red"
+        - "traefik.http.routers.web-https-router.middlewares=without-www"
         - "traefik.http.services.web.loadbalancer.server.port=8000"
-        - "traefik.http.middlewares.www-red.redirectregex.regex=^https?://www\\.hanusovedni\\.(online|sk)/(.*)"
-        - "traefik.http.middlewares.www-red.redirectregex.replacement=https://hanusovedni.$${1}/$${2}"
+#        - "traefik.http.middlewares.www-red.redirectregex.regex=^https?://www\\.hanusovedni\\.(online|sk)/(.*)"
+#        - "traefik.http.middlewares.www-red.redirectregex.replacement=https://hanusovedni.$${1}/$${2}"
 
   nginx:
     volumes:

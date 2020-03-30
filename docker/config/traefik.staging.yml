@@ -13,6 +13,13 @@ entryPoints:
   web-entry-secure:
     address: :443
 
+http:
+  middlewares:
+    without-www:
+      redirectRegex:
+        regex: "^https?://www\.hanusovedni\.(online|sk)/(.*)"
+        replacement: "https://hanusovedni.${1}/${2}"
+
 
 api:
   dashboard: true
