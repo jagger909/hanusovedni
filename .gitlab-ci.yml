@@ -1,7 +1,9 @@
 stages:
   - build
-  - deploy
-  - purge cache
+  - deploy staging
+  - purge cache staging
+  - deploy production
+  - purge cache production
 
 build-image:
   stage: build
@@ -32,7 +34,6 @@ build-image:
     - docker push ${CI_REGISTRY_IMAGE}:latest
 
 .deploy:
-  stage: deploy
   image: kroniak/ssh-client:3.9
   variables:
     DOCKER_RUN: 'docker run --rm
@@ -71,31 +72,34 @@ build-image:
     url: https://hanusovedni.sk
 
 deploy:staging:
+  stage: deploy staging
   extends:
     - .deploy
     - .staging
 
 deploy:production:
+  stage: deploy production
   when: manual
   extends:
     - .deploy
     - .production
 
 .purge-cache:
-  stage: purge cache
   image: curlimages/curl:7.69.1
   script:
     - "curl -X POST 'https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONEID}/purge_cache'
         -H 'Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}'
         -H 'Content-Type: application/json'
-        --data '{\"purge_everything\":true}'"
+        --data '{"purge_everything":true}'"
 
 purge-cache:staging:
+  stage: purge staging
   extends:
     - .purge-cache
     - .staging
 
 purge-cache:production:
+  stage: purge production
   extends:
     - .purge-cache
     - .production
