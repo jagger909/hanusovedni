@@ -53,7 +53,7 @@ build-image:
     - ssh $SERVER "docker system prune --all --force"
     - ssh $SERVER "$DOCKER_RUN python manage.py migrate --no-input"
     - ssh $SERVER "$DOCKER_RUN python manage.py collectstatic --no-input"
-    - 'ssh $SERVER "WEB_IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}
+    - 'ssh $SERVER "WEB_IMAGE=$CI_REGISTRY_IMAGE:$CI_PIPELINE_IID ENVIRONMENT=$CI_ENVIRONMENT_NAME
         docker stack deploy
         -c docker-compose.yml
         -c docker-compose.prod.yml
