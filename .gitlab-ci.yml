@@ -41,7 +41,7 @@ build-image:
                   --env-file secrets.env
                   -e DJANGO_SETTINGS_MODULE="hanusovedni.settings.production"
                   ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}'
-  before_script:
+  script:
     - mkdir -p ~/.ssh
     - echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
     - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
