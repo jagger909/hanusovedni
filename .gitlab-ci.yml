@@ -1,48 +1,9 @@
 stages:
-  - purge cache
   - build
   - deploy
+  - purge cache
 
-.deploy-template: &deploy-template
-  stage: deploy
-  image: kroniak/ssh-client:3.9
-  before_script:
-#    - apk add curl
-    - mkdir -p ~/.ssh
-    - echo "${STAGING_PRIVATE_KEY}" | tr -d '\r' > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
-    - eval "$(ssh-agent -s)"
-    - ssh-add ~/.ssh/id_rsa
-    - ssh-keyscan -H ${STAGING_IP} >> ~/.ssh/known_hosts
-  script:
-    - scp -r docker-compose.yml docker-compose.prod.yml nginx.conf root@${STAGING_IP}:~/
-    - scp -r traefik.staging.yml root@${STAGING_IP}:~/traefik.yml
-    - scp ${STAGING_SECRETS} root@${STAGING_IP}:~/secrets.env
-    - ssh root@${STAGING_IP} "docker system prune --all --force"
-    - ssh root@${STAGING_IP} "echo \"WEB_IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}\" >> secrets.env"
-    - ssh root@${STAGING_IP} "echo ${CI_REGISTRY_PASSWORD} | docker login -u ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}"
-    - "ssh root@${STAGING_IP} \"
-        docker run --rm
-        --network hanus-net
-        --env-file secrets.env
-        -e DJANGO_SETTINGS_MODULE=\"hanusovedni.settings.production\"
-        ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID} python manage.py migrate --no-input\""
-    - "ssh root@${STAGING_IP} \"
-        docker run --rm
-        -v /var/www/static:/static_root
-        --env-file secrets.env
-        -e DJANGO_SETTINGS_MODULE=\"hanusovedni.settings.production\"
-        ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID} python manage.py collectstatic --no-input\""
-    - "ssh root@${STAGING_IP} \"
-        WEB_IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}
-        docker stack deploy
-        -c docker-compose.yml
-        -c docker-compose.prod.yml
-        --with-registry-auth hanusovedni\""
-    - echo "Deployment done succesfully"
-
-
-build:
+build-image:
   stage: build
   image: docker:19.03.8
   services:
@@ -70,20 +31,57 @@ build:
     - docker push ${CI_REGISTRY_IMAGE}:compile-stage
     - docker push ${CI_REGISTRY_IMAGE}:latest
 
-deploy:staging:
-  <<: *deploy-template
+.deploy:
+  stage: deploy
+  image: kroniak/ssh-client:3.9
+  variables:
+    DOCKER_RUN: 'docker run --rm
+                  --network hanus-net
+                  -v /var/www/static:/static_root
+                  --env-file secrets.env
+                  -e DJANGO_SETTINGS_MODULE="hanusovedni.settings.production"
+                  ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}'
+  before_script:
+    - mkdir -p ~/.ssh
+    - echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - scp docker-compose.yml docker-compose.prod.yml nginx.conf $SERVER:~/
+    - scp traefik.$CI_ENVIRONMENT_NAME.yml $SERVER:~/traefik.yml
+    - scp $SECRETS $SERVER:~/secrets.env
+    - ssh $SERVER "echo "WEB_IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}" >> secrets.env"
+    - ssh $SERVER "echo ${CI_REGISTRY_PASSWORD} | docker login -u ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}"
+    - ssh $SERVER "docker system prune --all --force"
+    - ssh $SERVER "$DOCKER_RUN python manage.py migrate --no-input"
+    - ssh $SERVER "$DOCKER_RUN python manage.py collectstatic --no-input"
+    - 'ssh $SERVER "WEB_IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}
+        docker stack deploy
+        -c docker-compose.yml
+        -c docker-compose.prod.yml
+        --with-registry-auth hanusovedni"'
+
+
+.staging:
   environment:
     name: staging
     url: https://hanusovedni.online
 
-deploy:production:
-  <<: *deploy-template
-  when: manual
+.production:
   environment:
     name: production
     url: https://hanusovedni.sk
 
-.purge-CF-template: &purge-CF-template
+deploy:staging:
+  extends:
+    - .deploy
+    - .staging
+
+deploy:production:
+  when: manual
+  extends:
+    - .deploy
+    - .production
+
+.purge-cache:
   stage: purge cache
   image: curlimages/curl:7.69.1
   script:
@@ -92,8 +90,12 @@ deploy:production:
         -H 'Content-Type: application/json'
         --data '{\"purge_everything\":true}'"
 
-purge-CF:staging:
-  <<: *purge-CF-template
-  environment:
-    name: staging
-    url: https://hanusovedni.online
+purge-cache:staging:
+  extends:
+    - .purge-cache
+    - .staging
+
+purge-cache:production:
+  extends:
+    - .purge-cache
+    - .production
