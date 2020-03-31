@@ -106,7 +106,7 @@ purge-cache:production:
     - .production
 
 
-refresh-build-cache:on-schedule:
+build-image:on-schedule:
   image: docker:19.03.8
   stage: build
   services:
