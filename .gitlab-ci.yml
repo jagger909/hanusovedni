@@ -140,8 +140,8 @@ build-image:on-schedule:
     - scp $RCLONE_CONF $SERVER:~/rclone.conf
     - ssh $SERVER "DB_CONTAINER=$(docker ps | grep hanusovedni_db | cut -d' ' -f1)"
     - ssh $SERVER "BACKUP_FILE=$(/tmp/$(date +%F)-${CI_ENVIRONMENT_NAME}.sql.gz)"
-    - ssh $SERVER "docker exec $DB_CONTAINER pg_dump -U hanusovedni -d hanusovedni | gzip > /tmp/$BACKUP_FILE"
     - sleep 600
+    - ssh $SERVER "docker exec $DB_CONTAINER pg_dump -U hanusovedni -d hanusovedni | gzip > /tmp/$BACKUP_FILE"
     - 'ssh $SERVER "docker run --rm rclone/rclone
           -v rclone.conf:/config/rclone/rclone.conf
           -v /tmp:/backup
