@@ -134,6 +134,9 @@ build-image:on-schedule:
   only:
     - schedules
   script:
+    - mkdir -p ~/.ssh
+    - echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
     - scp $RCLONE_CONF $SERVER:~/rclone.conf
     - ssh $SERVER "DB_CONTAINER=$(docker ps | grep hanusovedni_db | cut -d' ' -f1)"
     - ssh $SERVER "BACKUP_FILE=$(/tmp/$(date +%F)-${CI_ENVIRONMENT_NAME}.sql.gz)"
