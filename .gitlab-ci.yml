@@ -139,13 +139,14 @@ build-image:on-schedule:
     - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
     - scp $RCLONE_CONF $SERVER:~/rclone.conf
     - DB_CONTAINER=$(ssh $SERVER "echo \$(docker ps | grep hanusovedni_db | cut -d' ' -f1)")
-    - BACKUP_FILE=$(date +%F)-${CI_ENVIRONMENT_NAME}.sql.gz
+    - BACKUP_FILE=$(date +%F).sql.gz
     - echo $DB_CONTAINER && echo $BACKUP_FILE
     - ssh $SERVER "docker exec $DB_CONTAINER pg_dump -U hanusovedni -d hanusovedni | gzip > /tmp/$BACKUP_FILE"
-    - 'ssh $SERVER "docker run --rm rclone/rclone
-          -v rclone.conf:/config/rclone/rclone.conf
+    - 'ssh $SERVER "docker run --rm
+          -v \$PWD/rclone.conf:/config/rclone/rclone.conf
           -v /tmp:/backup
-          copy /backup/$BACKUP_FILE dropbox:backup/hanusovedni"'
+          rclone/rclone copy
+          /backup/$BACKUP_FILE dropbox:backup/hanusovedni/${CI_ENVIRONMENT_NAME}"'
 
 backup-db:staging:
   extends:
