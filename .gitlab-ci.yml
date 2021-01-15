@@ -101,7 +101,8 @@ deploy:production:
       echo bla ${i}
       echo image "grep -c '${IMAGE}'"
       lines=$(ssh $SERVER "docker ps -f 'status=running' -f 'health=healthy' -f 'name=hanusovedni_web' --format '{{.Image}}'")
-      count=$(echo $line | grep -c 'hanusovedni')
+      echo $lines
+      count=$(echo $lines | grep -c 'hanusovedni')
       echo ${count}
     done
     exit 1
