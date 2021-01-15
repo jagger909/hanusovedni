@@ -63,13 +63,13 @@ build-image:
         -c docker-compose.prod.yml
         --with-registry-auth hanusovedni"'
     - echo Waiting for containers to be running and healthy
-    - echo ${IMAGE}
+    - echo $IMAGE
     - |
       for i in $(seq 60); do
         echo second ${i}
         containers=$(ssh $SERVER "docker ps -f 'status=running' -f 'health=healthy' -f 'name=hanusovedni_web' --format '{{.Image}}'")
         echo Current containers: ${containers}
-        count=$(echo $containers | tr " " "\n" | grep -c ${IMAGE})
+        count=$(echo $containers | tr " " "\n" | grep -c $IMAGE)
         echo New healthy containers: ${count}
         if [ "${count}" -gt 1 ]; then
           echo "Container is healthy after ${i} seconds."
