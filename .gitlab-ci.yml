@@ -63,6 +63,7 @@ build-image:
         -c docker-compose.prod.yml
         --with-registry-auth hanusovedni"'
     - echo Waiting for containers to be running and healthy
+    - echo ${IMAGE}
     - |
       for i in $(seq 60); do
         echo second ${i}
