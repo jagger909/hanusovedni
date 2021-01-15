@@ -1,7 +1,7 @@
 stages:
-  - purge cache staging
   - build
   - deploy staging
+  - purge cache staging
   - deploy production
   - purge cache production
 
@@ -61,6 +61,28 @@ build-image:
         -c docker-compose.yml
         -c docker-compose.prod.yml
         --with-registry-auth hanusovedni"'
+    - |
+      echo "ahoj"
+      mkdir -p ~/.ssh
+      echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+      echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+      IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}
+      for i in $(seq 60); do
+        echo second ${i}
+        echo image "grep -c '${IMAGE}'"
+        lines=$(ssh $SERVER "docker ps -f 'status=running' -f 'health=healthy' -f 'name=hanusovedni_web' --format '{{.Image}}'")
+        echo lines $lines
+        count=$(echo $lines | tr " " "\n" | grep -c 'hanusovedni')
+        echo ${count}
+        if [ "${count}" -gt 1 ]; then
+          echo "Container is healthy after ${i} seconds."
+          exit 0
+        fi
+        sleep 1
+      done
+      echo "Timeout exceeded. Count: ${count}"
+      exit 1
+
 
 
 .staging:
@@ -88,51 +110,19 @@ deploy:production:
     - .production
 
 .purge-cache:
-  image: kroniak/ssh-client:3.9
+  image: curlimages/curl:7.69.1
   except:
     - schedules
-  script: |
-    echo "'one'"
-    mkdir -p ~/.ssh
-    echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
-    echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
-    IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}
-    for i in $(seq 10); do
-      echo bla ${i}
-      echo image "grep -c '${IMAGE}'"
-      lines=$(ssh $SERVER "docker ps -f 'status=running' -f 'health=healthy' -f 'name=hanusovedni_web' --format '{{.Image}}'")
-      echo $lines
-      count=$(echo $lines | tr " " "\n" | grep -c 'hanusovedni')
-      echo ${count}
-    done
-    exit 1
-#    - mkdir -p ~/.ssh
-#    - echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
-#    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
-#    - scp -r docker/wait-for-healthy.sh $SERVER:/tmp/
-#    - ssh $SERVER /tmp/wait-for-healthy.sh "${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}" "${CLOUDFLARE_ZONEID}"
-#    - '
-#    IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID} ;
-#    echo "Wait for image ${IMAGE} to be healthy..." ;
-#    for i in $(seq 60); do
-#      echo bla ${i} ;
-#      count=$(ssh $SERVER \"docker ps -f "status=running" -f "health=healthy" -f "name=hanusovedni_web" --format "{{.Image}}" | grep -c "${IMAGE}" \") ;
-#      echo ${count} ;
-#    done
-#    '
-#    - chmod +x ./docker/wait-for-healthy.sh
-#    - healthy=$(./docker/wait-for-healthy.sh)
-#    - if [[ ${healthy} -ne 0 ]] ; then exit 1; fi
-#    - echo ========== Cleaning cache ==========
-#    - "http_code=$(curl -X POST \"https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONEID}/purge_cache\"
-#        -H \"Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}\"
-#        -H 'Content-Type: application/json'
-#        --data '{\"purge_everything\":true}'
-#        -o /tmp/out.txt
-#        -w '%{http_code}'
-#        --silent)"
-#    - echo $http_code && cat /tmp/out.txt && echo
-#    - if [[ "$http_code" -ne 200 ]] ; then exit 1; else exit 0 ; fi
+  script:
+    - "http_code=$(curl -X POST \"https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONEID}/purge_cache\"
+        -H \"Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}\"
+        -H 'Content-Type: application/json'
+        --data '{\"purge_everything\":true}'
+        -o /tmp/out.txt
+        -w '%{http_code}'
+        --silent)"
+    - echo $http_code && cat /tmp/out.txt && echo
+    - if [[ "$http_code" -ne 200 ]] ; then exit 1; else exit 0 ; fi
 
 purge-cache:staging:
   stage: purge cache staging
