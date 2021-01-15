@@ -92,11 +92,13 @@ deploy:production:
   except:
     - schedules
   script:
-    - "
+    - '
+    IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}
+    echo "Wait for image ${IMAGE} to be healthy..."
     for i in $(seq 60); do
       echo bla ${i} \n
     done
-    "
+    '
     - chmod +x ./docker/wait-for-healthy.sh
     - healthy=$(./docker/wait-for-healthy.sh)
     - if [[ ${healthy} -ne 0 ]] ; then exit 1; fi
