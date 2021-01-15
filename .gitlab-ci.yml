@@ -93,8 +93,8 @@ deploy:production:
     - schedules
   script:
     - '
-    IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}
-    echo "Wait for image ${IMAGE} to be healthy..."
+    IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID} ;
+    echo "Wait for image ${IMAGE} to be healthy..." ;
     for i in $(seq 60); do
       echo bla ${i} \n
     done
