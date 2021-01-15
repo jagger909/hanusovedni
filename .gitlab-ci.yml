@@ -100,7 +100,8 @@ deploy:production:
     for i in $(seq 10); do
       echo bla ${i}
       echo image "grep -c '${IMAGE}'"
-      count=$(ssh $SERVER "docker ps -f 'status=running' -f 'health=healthy' -f 'name=hanusovedni_web' --format '{{.Image}}' '|' grep -c '${IMAGE}'")
+      lines=$(ssh $SERVER "docker ps -f 'status=running' -f 'health=healthy' -f 'name=hanusovedni_web' --format '{{.Image}}'")
+      count=$(echo $line | grep -c 'hanusovedni')
       echo ${count}
     done
     exit 1
