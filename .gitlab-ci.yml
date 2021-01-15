@@ -96,7 +96,9 @@ deploy:production:
     IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID} ;
     echo "Wait for image ${IMAGE} to be healthy..." ;
     for i in $(seq 60); do
-      echo bla ${i} \n
+      echo bla ${i} \n ;
+      count=$(docker ps -f "status=running" -f "health=healthy" -f "name=hanusovedni_web" --format "{{.Image}}" | grep -c "${IMAGE}") ;
+      echo ${count} ;
     done
     '
     - chmod +x ./docker/wait-for-healthy.sh
