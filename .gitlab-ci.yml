@@ -91,34 +91,37 @@ deploy:production:
   image: kroniak/ssh-client:3.9
   except:
     - schedules
-  script:
-    - mkdir -p ~/.ssh
-    - echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
-    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+  script: |
+    echo "'one'"
+    echo "two"
+    echo three
+#    - mkdir -p ~/.ssh
+#    - echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+#    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
 #    - scp -r docker/wait-for-healthy.sh $SERVER:/tmp/
 #    - ssh $SERVER /tmp/wait-for-healthy.sh "${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}" "${CLOUDFLARE_ZONEID}"
-    - '
-    IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID} ;
-    echo "Wait for image ${IMAGE} to be healthy..." ;
-    for i in $(seq 60); do
-      echo bla ${i} ;
-      count=$(ssh $SERVER \"docker ps -f "status=running" -f "health=healthy" -f "name=hanusovedni_web" --format "{{.Image}}" | grep -c "${IMAGE}" \") ;
-      echo ${count} ;
-    done
-    '
-    - chmod +x ./docker/wait-for-healthy.sh
-    - healthy=$(./docker/wait-for-healthy.sh)
-    - if [[ ${healthy} -ne 0 ]] ; then exit 1; fi
-    - echo ========== Cleaning cache ==========
-    - "http_code=$(curl -X POST \"https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONEID}/purge_cache\"
-        -H \"Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}\"
-        -H 'Content-Type: application/json'
-        --data '{\"purge_everything\":true}'
-        -o /tmp/out.txt
-        -w '%{http_code}'
-        --silent)"
-    - echo $http_code && cat /tmp/out.txt && echo
-    - if [[ "$http_code" -ne 200 ]] ; then exit 1; else exit 0 ; fi
+#    - '
+#    IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID} ;
+#    echo "Wait for image ${IMAGE} to be healthy..." ;
+#    for i in $(seq 60); do
+#      echo bla ${i} ;
+#      count=$(ssh $SERVER \"docker ps -f "status=running" -f "health=healthy" -f "name=hanusovedni_web" --format "{{.Image}}" | grep -c "${IMAGE}" \") ;
+#      echo ${count} ;
+#    done
+#    '
+#    - chmod +x ./docker/wait-for-healthy.sh
+#    - healthy=$(./docker/wait-for-healthy.sh)
+#    - if [[ ${healthy} -ne 0 ]] ; then exit 1; fi
+#    - echo ========== Cleaning cache ==========
+#    - "http_code=$(curl -X POST \"https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONEID}/purge_cache\"
+#        -H \"Authorization: Bearer ${CLOUDFLARE_BEARER_TOKEN}\"
+#        -H 'Content-Type: application/json'
+#        --data '{\"purge_everything\":true}'
+#        -o /tmp/out.txt
+#        -w '%{http_code}'
+#        --silent)"
+#    - echo $http_code && cat /tmp/out.txt && echo
+#    - if [[ "$http_code" -ne 200 ]] ; then exit 1; else exit 0 ; fi
 
 purge-cache:staging:
   stage: purge cache staging
