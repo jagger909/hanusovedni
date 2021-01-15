@@ -40,6 +40,7 @@ build-image:
   except:
     - schedules
   variables:
+    IMAGE: ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}
     DOCKER_RUN: 'docker run --rm
                   --network hanus-net
                   -v /var/www/static:/static_root
@@ -56,33 +57,27 @@ build-image:
     - ssh $SERVER "docker system prune --all --force"
     - ssh $SERVER "$DOCKER_RUN python manage.py migrate --no-input"
     - ssh $SERVER "$DOCKER_RUN python manage.py collectstatic --no-input"
-    - 'ssh $SERVER "WEB_IMAGE=$CI_REGISTRY_IMAGE:$CI_PIPELINE_IID ENVIRONMENT=$CI_ENVIRONMENT_NAME
+    - 'ssh $SERVER "WEB_IMAGE=$IMAGE ENVIRONMENT=$CI_ENVIRONMENT_NAME
         docker stack deploy
         -c docker-compose.yml
         -c docker-compose.prod.yml
         --with-registry-auth hanusovedni"'
+    - echo Waiting for containers to be running and healthy
     - |
-      echo "ahoj"
-      mkdir -p ~/.ssh
-      echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
-      echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
-      IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}
       for i in $(seq 60); do
         echo second ${i}
-        echo image "grep -c '${IMAGE}'"
-        lines=$(ssh $SERVER "docker ps -f 'status=running' -f 'health=healthy' -f 'name=hanusovedni_web' --format '{{.Image}}'")
-        echo lines $lines
-        count=$(echo $lines | tr " " "\n" | grep -c 'hanusovedni')
-        echo ${count}
+        containers=$(ssh $SERVER "docker ps -f 'status=running' -f 'health=healthy' -f 'name=hanusovedni_web' --format '{{.Image}}'")
+        echo Current containers: ${containers}
+        count=$(echo $containers | tr " " "\n" | grep -c 'hanusovedni')
+        echo New healthy containers: ${count}
         if [ "${count}" -gt 1 ]; then
           echo "Container is healthy after ${i} seconds."
           exit 0
         fi
         sleep 1
       done
-      echo "Timeout exceeded. Count: ${count}"
+      echo "Timeout exceeded. Number of new containers: ${count}"
       exit 1
-
 
 
 .staging:
