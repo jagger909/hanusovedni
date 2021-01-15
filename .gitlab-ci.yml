@@ -97,7 +97,7 @@ deploy:production:
     echo "Wait for image ${IMAGE} to be healthy..." ;
     for i in $(seq 60); do
       echo bla ${i} \n ;
-      count=$(docker ps -f "status=running" -f "health=healthy" -f "name=hanusovedni_web" --format "{{.Image}}" | grep -c "${IMAGE}") ;
+      count=$(ssh $SERVER docker ps -f "status=running" -f "health=healthy" -f "name=hanusovedni_web" --format "{{.Image}}" | grep -c "${IMAGE}") ;
       echo ${count} ;
     done
     '
