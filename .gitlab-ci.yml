@@ -93,18 +93,18 @@ deploy:production:
     - schedules
   script:
     - IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}
-    - "echo 'Wait for image ${IMAGE} to be healthy...'\
-       for i in `seq 60`; do\
-         COUNT=$(docker ps -f 'status=running' -f 'health=healthy' -f 'name=hanusovedni_web' --format '{{.Image}}' | grep ${IMAGE} | wc -l)\
-         if [ ${COUNT} -gt 1 ]; then\
-           echo 'Container is healthy after ${i} seconds.'\
-           break\
-         fi\
-         sleep 1\
-       done\
-       if [ ${COUNT} -lt 2 ]; then\
-         echo 'Timeout exceeded. Count: ${COUNT}'\
-         exit 1\
+    - "echo 'Wait for image ${IMAGE} to be healthy...'
+       for i in `seq 60`; do
+         COUNT=$(docker ps -f 'status=running' -f 'health=healthy' -f 'name=hanusovedni_web' --format '{{.Image}}' | grep ${IMAGE} | wc -l)
+         if [ ${COUNT} -gt 1 ]; then
+           echo 'Container is healthy after ${i} seconds.'
+           break
+         fi
+         sleep 1
+       done
+       if [ ${COUNT} -lt 2 ]; then
+         echo 'Timeout exceeded. Count: ${COUNT}'
+         exit 1
        fi"
     - echo ========== Cleaning cache ==========
     - "http_code=$(curl -X POST \"https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONEID}/purge_cache\"
