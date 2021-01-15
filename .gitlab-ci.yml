@@ -68,7 +68,7 @@ build-image:
         echo second ${i}
         containers=$(ssh $SERVER "docker ps -f 'status=running' -f 'health=healthy' -f 'name=hanusovedni_web' --format '{{.Image}}'")
         echo Current containers: ${containers}
-        count=$(echo $containers | tr " " "\n" | grep -c 'hanusovedni')
+        count=$(echo $containers | tr " " "\n" | grep -c 'registry.gitlab.com/jozo/hanusovedni:400')
         echo New healthy containers: ${count}
         if [ "${count}" -gt 1 ]; then
           echo "Container is healthy after ${i} seconds."
