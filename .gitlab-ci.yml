@@ -98,7 +98,7 @@ deploy:production:
     echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
     for i in $(seq 60); do
       echo bla ${i}
-      count=$(ssh $SERVER "docker ps -f 'status=running' -f 'health=healthy' -f 'name=hanusovedni_web' --format '{{.Image}}' | grep -c ${IMAGE}")
+      count=$(ssh $SERVER "docker ps -f 'status=running' -f 'health=healthy' -f 'name=hanusovedni_web' --format '{{.Image}}'")
       echo ${count}
     done
 #    - mkdir -p ~/.ssh
