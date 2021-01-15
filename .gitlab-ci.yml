@@ -92,7 +92,7 @@ deploy:production:
   except:
     - schedules
   script:
-    - healthy=$(bash ./docker/wait-for-healthy.sh)
+    - healthy=$(./docker/wait-for-healthy.sh)
     - if [[ ${healthy} -ne 0 ]] ; then exit 1; fi
     - echo ========== Cleaning cache ==========
     - "http_code=$(curl -X POST \"https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONEID}/purge_cache\"
