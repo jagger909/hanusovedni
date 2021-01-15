@@ -96,9 +96,10 @@ deploy:production:
     mkdir -p ~/.ssh
     echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
     echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    IMAGE=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}
     for i in $(seq 10); do
       echo bla ${i}
-      count=$(ssh $SERVER "docker ps -f 'status=running' -f 'health=healthy' -f 'name=hanusovedni_web' --format '{{.Image}}' | grep -c hanusove")
+      count=$(ssh $SERVER "docker ps -f 'status=running' -f 'health=healthy' -f 'name=hanusovedni_web' --format '{{.Image}}' | grep -c '${IMAGE}'")
       echo ${count}
     done
 #    - mkdir -p ~/.ssh
