@@ -9,7 +9,7 @@ Webpage for "Hanus Days" - A unique social city academic festival offering a val
 
 **Frontend:** Sass, jQuery, Elm
 
-**Monitoring:** [Status Page](https://stats.uptimerobot.com/A8xjNh98xx) 
+**Monitoring:** [Status Page](https://stats.uptimerobot.com/A8xjNh98xx)
 
 ### Architecture
 
@@ -31,6 +31,11 @@ Deployment is done automatically with GitLab CI (check `.gitlab-ci.yml`). There 
     * clean CDN cache
    
 All the secrets are stored in GitLab
+
+### Backup
+Backup is created once a week with GitLab CI/CD Schedules.
+
+- DB dump is copied to Dropbox.
 
 ## How to start with development
 1. Install docker and yarn
